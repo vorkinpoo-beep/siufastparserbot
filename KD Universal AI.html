@@ -1,0 +1,1941 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Navigator 2026</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --black: #0a0a0a;
+            --dark-gray: #121212;
+            --medium-gray: #1e1e1e;
+            --light-gray: #2d2d2d;
+            --orange: #ff5f1f;
+            --light-orange: #ff7a45;
+            --orange-glow: rgba(255, 95, 31, 0.3);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            scroll-behavior: smooth;
+        }
+        
+        body {
+            background-color: var(--black);
+            color: #fff;
+            overflow-x: hidden;
+        }
+        
+        /* Loader Animation */
+        .loader {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            background: var(--black);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s, visibility 0.5s;
+        }
+        
+        .loader.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+        
+        .loader-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 3px solid transparent;
+            border-top-color: var(--orange);
+            animation: spin 1s linear infinite;
+            position: relative;
+        }
+        
+        .loader-icon:before, .loader-icon:after {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+            border: 3px solid transparent;
+        }
+        
+        .loader-icon:before {
+            top: 5px;
+            left: 5px;
+            right: 5px;
+            bottom: 5px;
+            border-top-color: var(--light-orange);
+            animation: spin 2s linear infinite;
+        }
+        
+        .loader-icon:after {
+            top: 15px;
+            left: 15px;
+            right: 15px;
+            bottom: 15px;
+            border-top-color: #fff;
+            animation: spin 1.5s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+        
+        /* Header */
+        header {
+            background-color: var(--dark-gray);
+            padding: 20px 40px;
+            position: fixed;
+            width: 100%;
+            z-index: 100;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        header.scrolled {
+            padding: 15px 40px;
+            background-color: rgba(18, 18, 18, 0.95);
+            backdrop-filter: blur(10px);
+        }
+        
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+        
+        .logo-icon {
+            font-size: 28px;
+            color: var(--orange);
+            background: linear-gradient(135deg, var(--orange), var(--light-orange));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 15px var(--orange-glow);
+        }
+        
+        .logo-text {
+            font-size: 24px;
+            font-weight: 700;
+            color: white;
+            letter-spacing: 0.5px;
+        }
+        
+        .logo-text span {
+            color: var(--orange);
+        }
+        
+        .search-container {
+            position: relative;
+            margin-right: 20px;
+        }
+        
+        .search-input {
+            background-color: var(--medium-gray);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 30px;
+            padding: 10px 15px;
+            padding-left: 40px;
+            color: white;
+            width: 300px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: var(--orange);
+            box-shadow: 0 0 10px var(--orange-glow);
+            width: 350px;
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #aaa;
+            font-size: 16px;
+        }
+        
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            background: var(--medium-gray);
+            border-radius: 10px;
+            margin-top: 10px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            max-height: 400px;
+            overflow-y: auto;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+        
+        .search-results.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .search-result-item {
+            padding: 12px 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+        
+        .search-result-item:hover {
+            background: var(--light-gray);
+        }
+        
+        .search-result-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: white;
+        }
+        
+        .search-result-category {
+            font-size: 12px;
+            color: var(--orange);
+        }
+        
+        .search-no-results {
+            padding: 20px;
+            text-align: center;
+            color: #aaa;
+        }
+        
+        .nav-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+        }
+        
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 35px;
+        }
+        
+        nav a {
+            text-decoration: none;
+            color: #fff;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            position: relative;
+            padding: 5px 0;
+        }
+        
+        nav a:hover {
+            color: var(--orange);
+        }
+        
+        nav a::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: 0;
+            left: 0;
+            background-color: var(--orange);
+            transition: width 0.3s ease;
+        }
+        
+        nav a:hover::after {
+            width: 100%;
+        }
+        
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 140px 40px 80px;
+            position: relative;
+            overflow: hidden;
+            background: radial-gradient(circle at center, var(--dark-gray) 0%, var(--black) 70%);
+        }
+        
+        .hero::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPgogIDxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InRyYW5zcGFyZW50IiAvPgogIDxwYXR0ZXJuIGlkPSJwYXR0ZXJuIiB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHBhdHRlcm5UcmFuc2Zvcm09InJvdGF0ZSgzMCkiPgogICAgPGNpcmNsZSBjeD0iMTAiIGN5PSIxMCIgcj0iMC41IiBmaWxsPSJyZ2JhKDI1NSwgOTUsIDMxLCAwLjEpIiAvPgogIDwvcGF0dGVybj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI3BhdHRlcm4pIiAvPgo8L3N2Zz4=');
+            opacity: 0.3;
+        }
+        
+        .hero-container {
+            max-width: 1200px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            z-index: 1;
+        }
+        
+        .hero-title {
+            font-size: 4.5rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+            line-height: 1.1;
+        }
+        
+        .hero-title-white {
+            color: white;
+        }
+        
+        .hero-title-orange {
+            color: var(--orange);
+            background: linear-gradient(135deg, var(--orange) 0%, var(--light-orange) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .hero-subtitle {
+            font-size: 1.2rem;
+            font-weight: 400;
+            margin-bottom: 40px;
+            max-width: 700px;
+            color: #aaa;
+            line-height: 1.6;
+        }
+        
+        .cta-buttons {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            padding: 15px 30px;
+            border-radius: 30px;
+            font-size: 16px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            border: none;
+            outline: none;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--orange) 0%, var(--light-orange) 100%);
+            color: white;
+            box-shadow: 0 5px 15px var(--orange-glow);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px var(--orange-glow);
+        }
+        
+        .btn-secondary {
+            background: transparent;
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-3px);
+        }
+        
+        /* Category Section */
+        .category-section {
+            padding: 100px 40px;
+            background-color: var(--dark-gray);
+            position: relative;
+        }
+        
+        .section-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .section-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+        
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: white;
+        }
+        
+        .section-title span {
+            color: var(--orange);
+        }
+        
+        .section-description {
+            font-size: 1.1rem;
+            max-width: 700px;
+            margin: 0 auto;
+            color: #aaa;
+            line-height: 1.6;
+        }
+        
+        /* Cards */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 40px;
+        }
+        
+        .card {
+            background-color: var(--medium-gray);
+            border-radius: 16px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .card-premium {
+            border: 2px solid var(--orange);
+            box-shadow: 0 0 20px var(--orange-glow);
+        }
+        
+        .card-premium::after {
+            content: 'РЕКОМЕНДУЕМ';
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: var(--orange);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .card-header {
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .card-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--orange) 0%, var(--light-orange) 100%);
+            font-size: 24px;
+            color: white;
+        }
+        
+        .card-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 0;
+        }
+        
+        .card-body {
+            padding: 20px;
+            flex-grow: 1;
+        }
+        
+        .card-description {
+            font-size: 0.95rem;
+            color: #bbb;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+        
+        .card-vpn-note {
+            display: inline-block;
+            background: rgba(255, 95, 31, 0.15);
+            color: var(--orange);
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+        
+        .card-list {
+            list-style: none;
+            margin: 15px 0;
+        }
+        
+        .card-list li {
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+        }
+        
+        .card-list li i {
+            color: var(--orange);
+        }
+        
+        .card-footer {
+            padding: 15px 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .btn-sm {
+            padding: 8px 15px;
+            font-size: 14px;
+            border-radius: 20px;
+        }
+        
+        /* Platform buttons */
+        .platform-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .platform-btn {
+            padding: 8px 12px;
+            border-radius: 8px;
+            background: var(--light-gray);
+            color: white;
+            font-size: 13px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.2s ease;
+        }
+        
+        .platform-btn:hover {
+            background: var(--orange);
+        }
+        
+        /* Instructions */
+        .instructions {
+            margin-top: 20px;
+            background: var(--light-gray);
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .instructions-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+        
+        .instructions-content {
+            display: none;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .instructions-content.show {
+            display: block;
+        }
+        
+        .instructions-list {
+            list-style: none;
+        }
+        
+        .instructions-list li {
+            margin-bottom: 8px;
+            display: flex;
+            gap: 8px;
+            align-items: flex-start;
+        }
+        
+        .instructions-list li i {
+            margin-top: 3px;
+            color: var(--orange);
+        }
+        
+        /* Telegram Bots */
+        .telegram-bots {
+            margin-top: 40px;
+        }
+        
+        .telegram-title {
+            font-size: 1.8rem;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        
+        .telegram-cards {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+        }
+        
+        .telegram-card {
+            background: var(--medium-gray);
+            border-radius: 12px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            width: 300px;
+            transition: all 0.3s ease;
+        }
+        
+        .telegram-card:hover {
+            background: var(--light-gray);
+            transform: translateY(-5px);
+        }
+        
+        .telegram-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #0088cc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: white;
+        }
+        
+        .telegram-name {
+            font-weight: 600;
+        }
+        
+        /* Features Grid */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .feature-item {
+            background: var(--light-gray);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .feature-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        .feature-icon {
+            font-size: 24px;
+            color: var(--orange);
+            margin-bottom: 5px;
+        }
+        
+        .feature-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 0;
+        }
+        
+        .feature-description {
+            font-size: 0.9rem;
+            color: #aaa;
+            line-height: 1.5;
+        }
+        
+        /* Perplexity Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .modal {
+            background: var(--medium-gray);
+            border-radius: 16px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+        }
+        
+        .modal-overlay.active .modal {
+            transform: translateY(0);
+        }
+        
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .modal-title {
+            font-size: 1.8rem;
+            color: white;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            color: #aaa;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .modal-close:hover {
+            color: white;
+        }
+        
+        .modal-body {
+            padding: 30px;
+        }
+        
+        .modal-section {
+            margin-bottom: 30px;
+        }
+        
+        .modal-section:last-child {
+            margin-bottom: 0;
+        }
+        
+        .modal-section-title {
+            font-size: 1.3rem;
+            color: var(--orange);
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Footer */
+        footer {
+            background-color: var(--dark-gray);
+            padding: 40px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .footer-text {
+            color: #777;
+            font-size: 14px;
+        }
+        
+        .footer-link {
+            color: var(--orange);
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        
+        .footer-link:hover {
+            color: var(--light-orange);
+            text-decoration: underline;
+        }
+        
+        /* Back to top */
+        .back-to-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--orange);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 99;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .back-to-top.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .back-to-top:hover {
+            background: var(--light-orange);
+            transform: translateY(-5px);
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .search-container {
+                margin-right: 10px;
+            }
+            
+            .search-input {
+                width: 200px;
+            }
+            
+            .search-input:focus {
+                width: 250px;
+            }
+        }
+        
+        @media (max-width: 992px) {
+            .hero-title {
+                font-size: 3.5rem;
+            }
+            
+            .card-grid {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            }
+            
+            .search-container {
+                display: none;
+                position: absolute;
+                top: 80px;
+                left: 0;
+                width: 100%;
+                padding: 20px;
+                background: var(--dark-gray);
+                z-index: 101;
+                box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            }
+            
+            .search-container.active {
+                display: block;
+            }
+            
+            .search-input {
+                width: 100%;
+            }
+            
+            .search-input:focus {
+                width: 100%;
+            }
+            
+            .search-toggle {
+                display: block;
+                background: none;
+                border: none;
+                color: white;
+                font-size: 20px;
+                cursor: pointer;
+                margin-right: 15px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 2.8rem;
+            }
+            
+            .hero-subtitle {
+                font-size: 1rem;
+            }
+            
+            .cta-buttons {
+                flex-direction: column;
+                width: 100%;
+                max-width: 300px;
+            }
+            
+            .section-title {
+                font-size: 2rem;
+            }
+            
+            .nav-toggle {
+                display: block;
+            }
+            
+            nav {
+                position: fixed;
+                top: 80px;
+                left: 0;
+                width: 100%;
+                background-color: var(--dark-gray);
+                padding: 20px;
+                transform: translateY(-100%);
+                opacity: 0;
+                visibility: hidden;
+                transition: all 0.3s ease;
+                box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            }
+            
+            nav.active {
+                transform: translateY(0);
+                opacity: 1;
+                visibility: visible;
+            }
+            
+            nav ul {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .telegram-cards {
+                justify-content: center;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            header {
+                padding: 15px 20px;
+            }
+            
+            .header-container {
+                gap: 10px;
+            }
+            
+            .logo-text {
+                font-size: 20px;
+            }
+            
+            .hero {
+                padding: 120px 20px 60px;
+            }
+            
+            .hero-title {
+                font-size: 2.2rem;
+            }
+            
+            .category-section {
+                padding: 60px 20px;
+            }
+            
+            .section-title {
+                font-size: 1.8rem;
+            }
+            
+            .card-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .back-to-top {
+                right: 15px;
+                bottom: 15px;
+                width: 40px;
+                height: 40px;
+            }
+        }
+        
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .animate-fadeIn {
+            animation: fadeIn 0.8s ease forwards;
+            opacity: 0;
+        }
+        
+        .animate-pulse {
+            animation: pulse 2s infinite;
+        }
+        
+        .delay-100 { animation-delay: 0.1s; }
+        .delay-200 { animation-delay: 0.2s; }
+        .delay-300 { animation-delay: 0.3s; }
+        .delay-400 { animation-delay: 0.4s; }
+        .delay-500 { animation-delay: 0.5s; }
+    </style>
+</head>
+<body>
+    <!-- Loader -->
+    <div class="loader">
+        <div class="loader-icon"></div>
+    </div>
+    
+    <!-- Header -->
+    <header id="header">
+        <div class="header-container">
+            <a href="#" class="logo">
+                <i class="fa-solid fa-brain logo-icon"></i>
+                <div class="logo-text">AI <span>Navigator</span></div>
+            </a>
+            
+            <!-- Search Bar -->
+            <div class="search-container" id="searchContainer">
+                <i class="fa-solid fa-search search-icon"></i>
+                <input type="text" class="search-input" id="searchInput" placeholder="Поиск по сайту...">
+                <div class="search-results" id="searchResults">
+                    <!-- Search results will appear here -->
+                </div>
+            </div>
+            
+            <button class="nav-toggle" id="navToggle">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+            
+            <nav id="mainNav">
+                <ul>
+                    <li><a href="#gpt">GPT Ассистенты</a></li>
+                    <li><a href="#presentations">Презентации</a></li>
+                    <li><a href="#images">Изображения</a></li>
+                    <li><a href="#documents">Документы</a></li>
+                    <li><a href="#vpn">VPN</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+    
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-container">
+            <h1 class="hero-title animate-fadeIn">
+                <span class="hero-title-white">Инструменты</span> 
+                <span class="hero-title-orange">ИИ</span><br>
+                <span class="hero-title-white">для студентов</span>
+            </h1>
+            <p class="hero-subtitle animate-fadeIn delay-200">Простой доступ к лучшим инструментам искусственного интеллекта для работы с текстом, изображениями и презентациями</p>
+            <div class="cta-buttons">
+                <a href="#gpt" class="btn btn-primary animate-fadeIn delay-300">
+                    <i class="fa-solid fa-robot"></i>
+                    Начать работу
+                </a>
+                <a href="#vpn" class="btn btn-secondary animate-fadeIn delay-400">
+                    <i class="fa-solid fa-shield"></i>
+                    Настроить VPN
+                </a>
+            </div>
+        </div>
+    </section>
+    
+    <!-- GPT Assistants Section -->
+    <section id="gpt" class="category-section">
+        <div class="section-container">
+            <div class="section-header">
+                <h2 class="section-title">GPT <span>Ассистенты</span></h2>
+                <p class="section-description">Доступ к самым мощным языковым моделям для решения любых задач</p>
+            </div>
+            
+            <!-- Premium Card -->
+            <div class="card card-premium animate-fadeIn">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <i class="fa-solid fa-crown"></i>
+                    </div>
+                    <h3 class="card-title">Perplexity AI Pro</h3>
+                </div>
+                <div class="card-body">
+                    <p class="card-description">Платная версия с расширенными возможностями поиска и доступом к продвинутым моделям GPT5, Claude-4-sonnet thinking, Gemini 2.5 PRO и другим нейросетям без ограничений.</p>
+                    
+                    <button class="btn btn-secondary btn-sm" id="perplexityDetailsBtn" style="margin-top: 5px; margin-bottom: 15px;">
+                        <i class="fa-solid fa-circle-info"></i>
+                        Подробнее о возможностях
+                    </button>
+                    
+                    <div class="platform-buttons">
+                        <a href="https://apps.apple.com/us/app/perplexity-ask-anything/id1668000334" target="_blank" class="platform-btn">
+                            <i class="fa-brands fa-apple"></i> iOS
+                        </a>
+                        <a href="https://play.google.com/store/apps/details?id=ai.perplexity.app.android&pli=1" target="_blank" class="platform-btn">
+                            <i class="fa-brands fa-android"></i> Android
+                        </a>
+                        <a href="https://dl.todesktop.com/25020447d4kq915" target="_blank" class="platform-btn">
+                            <i class="fa-brands fa-windows"></i> Windows
+                        </a>
+                        <a href="https://www.perplexity.ai/" target="_blank" class="platform-btn">
+                            <i class="fa-solid fa-globe"></i> Веб
+                        </a>
+                    </div>
+                    
+                    <div class="instructions">
+                        <div class="instructions-title" id="instructionsToggle">
+                            <i class="fa-solid fa-circle-info"></i>
+                            Инструкция по установке
+                            <i class="fa-solid fa-chevron-down" style="margin-left: auto;"></i>
+                        </div>
+                        <div class="instructions-content" id="instructionsContent">
+                            <ul class="instructions-list">
+                                <li>
+                                    <i class="fa-solid fa-check"></i>
+                                    <span>Установите приложение через одну из ссылок выше</span>
+                                </li>
+                                <li>
+                                    <i class="fa-solid fa-check"></i>
+                                    <span>Войдите через email: behkmbwt@vargosmail.com</span>
+                                </li>
+                                <li>
+                                    <i class="fa-solid fa-check"></i>
+                                    <span>Согласуйте с <a href="https://t.me/Ksodydes" target="_blank" style="color: var(--orange); text-decoration: none;">@Ksodydes</a> получение ссылки на активацию</span>
+                                </li>
+                                <li>
+                                    <i class="fa-solid fa-check"></i>
+                                    <span>Наслаждайтесь доступом ко всем продвинутым моделям</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <a href="https://www.perplexity.ai/" target="_blank" class="btn btn-primary btn-sm">Открыть Perplexity AI</a>
+                </div>
+            </div>
+            
+            <!-- Web GPT Services -->
+            <h3 class="telegram-title">Веб-сервисы GPT</h3>
+            <div class="card-grid">
+                <!-- GPT-chatbot.ru -->
+                <div class="card animate-fadeIn delay-100">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <i class="fa-solid fa-message"></i>
+                        </div>
+                        <h3 class="card-title">GPT-chatbot.ru</h3>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-description">Русскоязычный интерфейс с простым доступом к GPT без сложной регистрации.</p>
+                    </div>
+                    <div class="card-footer">
+                        <a href="https://gpt-chatbot.ru/" target="_blank" class="btn btn-primary btn-sm">Открыть сервис</a>
+                    </div>
+                </div>
+                
+                <!-- DeepSeek Chat -->
+                <div class="card animate-fadeIn delay-200">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <i class="fa-solid fa-brain"></i>
+                        </div>
+                        <h3 class="card-title">DeepSeek Chat</h3>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-description">Мощный альтернативный ассистент с продвинутыми возможностями обработки текста.</p>
+                    </div>
+                    <div class="card-footer">
+                        <a href="https://chat.deepseek.com/" target="_blank" class="btn btn-primary btn-sm">Открыть сервис</a>
+                    </div>
+                </div>
+                
+                <!-- ChatGPT -->
+                <div class="card animate-fadeIn delay-300">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <i class="fa-solid fa-comment-dots"></i>
+                        </div>
+                        <h3 class="card-title">ChatGPT <span class="card-vpn-note">VPN</span></h3>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-description">Оригинальный ChatGPT от OpenAI. Требуется VPN для доступа из России.</p>
+                    </div>
+                    <div class="card-footer">
+                        <a href="https://chatgpt.com/?openaicom-did=01304672-30a0-4577-92da-c3c15fa3223c&openaicom_referred=true" target="_blank" class="btn btn-primary btn-sm">Открыть сервис</a>
+                    </div>
+                </div>
+                
+                <!-- Gemini от Google -->
+                <div class="card animate-fadeIn delay-400">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <i class="fa-brands fa-google"></i>
+                        </div>
+                        <h3 class="card-title">Gemini <span class="card-vpn-note">VPN</span></h3>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-description">Мультимодальная AI-модель от Google с поддержкой текста и изображений.</p>
+                    </div>
+                    <div class="card-footer">
+                        <a href="https://gemini.google.com/?hl=ru" target="_blank" class="btn btn-primary btn-sm">Открыть сервис</a>
+                    </div>
+                </div>
+                
+                <!-- TryChatGPT -->
+                <div class="card animate-fadeIn delay-100">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <i class="fa-regular fa-comments"></i>
+                        </div>
+                        <h3 class="card-title">TryChatGPT</h3>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-description">Простой доступ к GPT без регистрации, идеально для быстрых запросов.</p>
+                    </div>
+                    <div class="card-footer">
+                        <a href="https://trychatgpt.ru/" target="_blank" class="btn btn-primary btn-sm">Открыть сервис</a>
+                    </div>
+                </div>
+                
+                <!-- Claude 3.7 Sonnet -->
+                <div class="card animate-fadeIn delay-200">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <i class="fa-solid fa-microchip"></i>
+                        </div>
+                        <h3 class="card-title">Claude 3.7 Sonnet</h3>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-description">Высокоточный ассистент для сложных задач с превосходным пониманием контекста.</p>
+                    </div>
+                    <div class="card-footer">
+                        <a href="https://miniapps.ai/claude-3-7-sonnet" target="_blank" class="btn btn-primary btn-sm">Открыть сервис</a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Telegram Bots -->
+            <div class="telegram-bots">
+                <h3 class="telegram-title">Telegram Боты</h3>
+                <div class="telegram-cards">
+                    <a href="https://t.me/GPT_chat_chatgpt_bot" target="_blank" class="telegram-card animate-fadeIn delay-100">
+                        <div class="telegram-icon">
+                            <i class="fa-brands fa-telegram"></i>
+                        </div>
+                        <div class="telegram-name">@GPT_chat_chatgpt_bot</div>
+                    </a>
+                    <a href="https://t.me/ChatGPT_General_Bot" target="_blank" class="telegram-card animate-fadeIn delay-200">
+                        <div class="telegram-icon">
+                            <i class="fa-brands fa-telegram"></i>
+                        </div>
+                        <div class="telegram-name">@ChatGPT_General_Bot</div>
+                    </a>
+                    <a href="https://t.me/gpt3_unlim_chatbot" target="_blank" class="telegram-card animate-fadeIn delay-300">
+                        <div class="telegram-icon">
+                            <i class="fa-brands fa-telegram"></i>
+                        </div>
+                        <div class="telegram-name">@gpt3_unlim_chatbot</div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Presentations Section -->
+    <section id="presentations" class="category-section" style="background-color: var(--black);">
+        <div class="section-container">
+            <div class="section-header">
+                <h2 class="section-title">ИИ для <span>Презентаций</span></h2>
+                <p class="section-description">Создавайте профессиональные презентации за считанные минуты с помощью искусственного интеллекта</p>
+            </div>
+            
+            <div class="card-grid">
+                <!-- Gamma -->
+                <div class="card animate-fadeIn delay-100">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <i class="fa-solid fa-presentation"></i>
+                        </div>
+                        <h3 class="card-title">Gamma</h3>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-description">Создавайте красивые презентации, веб-страницы и документы с помощью искусственного интеллекта.</p>
+                    </div>
+                    <div class="card-footer">
+                        <a href="https://gamma.app/create/generate" target="_blank" class="btn btn-primary btn-sm">Открыть сервис</a>
+                    </div>
+                </div>
+                
+                <!-- Sokratic -->
+                <div class="card animate-fadeIn delay-200">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <i class="fa-solid fa-chalkboard"></i>
+                        </div>
+                        <h3 class="card-title">Sokratic</h3>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-description">Русскоязычный сервис для создания профессиональных презентаций с помощью ИИ.</p>
+                    </div>
+                    <div class="card-footer">
+                        <a href="https://sokratic.ru/ru/" target="_blank" class="btn btn-primary btn-sm">Открыть сервис</a>
+                    </div>
+                </div>
+                
+                <!-- Present Simple -->
+                <div class="card animate-fadeIn delay-300">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <i class="fa-solid fa-file-powerpoint"></i>
+                        </div>
+                        <h3 class="card-title">Present Simple</h3>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-description">Генерирует презентации с профессиональным дизайном на основе вашего текстового запроса.</p>
+                    </div>
+                    <div class="card-footer">
+                        <a href="https://app.presentsimple.ai/" target="_blank" class="btn btn-primary btn-sm">Открыть сервис</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Images Section -->
+    <section id="images" class="category-section">
+        <div class="section-container">
+            <div class="section-header">
+                <h2 class="section-title">Работа с <span>Изображениями</span></h2>
+                <p class="section-description">Генерация и редактирование изображений с помощью искусственного интеллекта</p>
+            </div>
+            
+            <div class="card-grid">
+                <!-- Leonardo.ai -->
+                <div class="card animate-fadeIn delay-100">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <i class="fa-solid fa-paintbrush"></i>
+                        </div>
+                        <h3 class="card-title">Leonardo.ai</h3>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-description">Мощный инструмент для генерации высококачественных изображений по текстовому запросу.</p>
+                    </div>
+                    <div class="card-footer">
+                        <a href="https://app.leonardo.ai/image-generation" target="_blank" class="btn btn-primary btn-sm">Открыть сервис</a>
+                    </div>
+                </div>
+                
+                <!-- PhotoRoom -->
+                <div class="card animate-fadeIn delay-200">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <i class="fa-solid fa-object-ungroup"></i>
+                        </div>
+                        <h3 class="card-title">PhotoRoom</h3>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-description">Автоматическое удаление фона с изображений и создание профессиональных фотографий.</p>
+                    </div>
+                    <div class="card-footer">
+                        <a href="https://www.photoroom.com/" target="_blank" class="btn btn-primary btn-sm">Открыть сервис</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Documents Section -->
+    <section id="documents" class="category-section" style="background-color: var(--black);">
+        <div class="section-container">
+            <div class="section-header">
+                <h2 class="section-title">Работа с <span>Документами</span></h2>
+                <p class="section-description">Онлайн-сервисы для просмотра и редактирования документов различных форматов</p>
+            </div>
+            
+            <div class="card-grid">
+                <!-- Google Docs -->
+                <div class="card animate-fadeIn delay-100">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <i class="fa-solid fa-file-word"></i>
+                        </div>
+                        <h3 class="card-title">Google Docs</h3>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-description">Создание, редактирование и совместная работа над текстовыми документами (DOCX, TXT) в браузере.</p>
+                    </div>
+                    <div class="card-footer">
+                        <a href="https://docs.google.com/" target="_blank" class="btn btn-primary btn-sm">Открыть сервис</a>
+                    </div>
+                </div>
+                
+                <!-- Google Sheets -->
+                <div class="card animate-fadeIn delay-200">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <i class="fa-solid fa-file-excel"></i>
+                        </div>
+                        <h3 class="card-title">Google Sheets</h3>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-description">Работа с таблицами Excel (XLSX) онлайн с возможностью совместного редактирования.</p>
+                    </div>
+                    <div class="card-footer">
+                        <a href="https://sheets.google.com/" target="_blank" class="btn btn-primary btn-sm">Открыть сервис</a>
+                    </div>
+                </div>
+                
+                <!-- Google Slides -->
+                <div class="card animate-fadeIn delay-300">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <i class="fa-solid fa-file-powerpoint"></i>
+                        </div>
+                        <h3 class="card-title">Google Slides</h3>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-description">Создание и редактирование презентаций PowerPoint (PPTX) с доступом из любого устройства.</p>
+                    </div>
+                    <div class="card-footer">
+                        <a href="https://slides.google.com/" target="_blank" class="btn btn-primary btn-sm">Открыть сервис</a>
+                    </div>
+                </div>
+                
+                <!-- PDF Viewer -->
+                <div class="card animate-fadeIn delay-400">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <i class="fa-solid fa-file-pdf"></i>
+                        </div>
+                        <h3 class="card-title">PDF.js</h3>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-description">Бесплатный онлайн просмотрщик PDF-файлов с возможностью комментирования.</p>
+                    </div>
+                    <div class="card-footer">
+                        <a href="https://mozilla.github.io/pdf.js/web/viewer.html" target="_blank" class="btn btn-primary btn-sm">Открыть сервис</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- VPN Section -->
+    <section id="vpn" class="category-section">
+        <div class="section-container">
+            <div class="section-header">
+                <h2 class="section-title">VPN <span>Сервисы</span></h2>
+                <p class="section-description">Обеспечьте доступ к заблокированным ИИ-сервисам с помощью надежных VPN-решений</p>
+            </div>
+            
+            <div class="card-grid">
+                <!-- HitVPN (Android & iOS) -->
+                <div class="card animate-fadeIn delay-100">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <i class="fa-solid fa-bolt"></i>
+                        </div>
+                        <h3 class="card-title">HitVPN</h3>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-description">Быстрый и надежный VPN-сервис для мобильных устройств с простым интерфейсом и высокой скоростью соединения.</p>
+                        <div class="platform-buttons">
+                            <a href="https://s.hitvpn.tools/4080147.apk" target="_blank" class="platform-btn">
+                                <i class="fa-brands fa-android"></i> Android
+                            </a>
+                            <a href="https://apps.apple.com/us/app/hitvpn/id6463235095?l=ru" target="_blank" class="platform-btn">
+                                <i class="fa-brands fa-apple"></i> iOS
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <a href="https://s.hitvpn.tools/4080147.apk" target="_blank" class="btn btn-primary btn-sm">Скачать для Android</a>
+                    </div>
+                </div>
+                
+                <!-- HitProxy (iOS) -->
+                <div class="card animate-fadeIn delay-200">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <i class="fa-solid fa-shield-halved"></i>
+                        </div>
+                        <h3 class="card-title">HitProxy</h3>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-description">Прокси-сервис для iOS устройств с высокой степенью защиты и стабильным соединением.</p>
+                    </div>
+                    <div class="card-footer">
+                        <a href="https://apps.apple.com/ru/app/hitproxy/id6502572134" target="_blank" class="btn btn-primary btn-sm">Скачать для iOS</a>
+                    </div>
+                </div>
+                
+                <!-- OpenVPN -->
+                <div class="card animate-fadeIn delay-300">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <i class="fa-solid fa-lock"></i>
+                        </div>
+                        <h3 class="card-title">OpenVPN</h3>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-description">Надежный кроссплатформенный VPN-клиент с открытым исходным кодом для всех операционных систем.</p>
+                    </div>
+                    <div class="card-footer">
+                        <a href="https://openvpn.net/client/" target="_blank" class="btn btn-primary btn-sm">Установить приложение</a>
+                    </div>
+                </div>
+                
+                <!-- Дед VPN (iOS) -->
+                <div class="card animate-fadeIn delay-400">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <i class="fa-brands fa-apple"></i>
+                        </div>
+                        <h3 class="card-title">Дед VPN для iOS</h3>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-description">Быстрый и надежный VPN-клиент для устройств Apple с простым интерфейсом.</p>
+                    </div>
+                    <div class="card-footer">
+                        <a href="https://apps.apple.com/us/app/%D0%B4%D0%B5%D0%B4-%D0%B2%D0%BF%D0%BD-%D0%B1%D1%8B%D1%81%D1%82%D1%80%D1%8B%D0%B9-proxy-vpn/id6738896306" target="_blank" class="btn btn-primary btn-sm">Установить приложение</a>
+                    </div>
+                </div>
+                
+                <!-- Planet VPN (iOS) -->
+                <div class="card animate-fadeIn delay-500">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <i class="fa-solid fa-globe"></i>
+                        </div>
+                        <h3 class="card-title">Planet VPN для iOS</h3>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-description">Бесплатный VPN с неограниченной пропускной способностью и защитой данных.</p>
+                    </div>
+                    <div class="card-footer">
+                        <a href="https://apps.apple.com/us/app/planet-free-vpn-super-proxy/id1410235921?l=ru" target="_blank" class="btn btn-primary btn-sm">Установить приложение</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <p class="footer-text">Powered by <a href="https://t.me/ksddsgnavigation" target="_blank" class="footer-link">Ksody Design</a></p>
+        </div>
+    </footer>
+    
+    <!-- Back to Top Button -->
+    <div class="back-to-top" id="backToTop">
+        <i class="fa-solid fa-arrow-up"></i>
+    </div>
+    
+    <!-- Perplexity Modal -->
+    <div class="modal-overlay" id="perplexityModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">
+                    <i class="fa-solid fa-crown" style="color: var(--orange);"></i>
+                    Возможности Perplexity Pro
+                </h3>
+                <button class="modal-close" id="modalClose">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-section">
+                    <h4 class="modal-section-title">О Perplexity Pro</h4>
+                    <p>Perplexity Pro — это платная версия с расширенными возможностями поиска и ИИ‑моделей, без лимитов на загрузку файлов, с глубокими режимами исследования (Pro Search, Deep Research) и приоритетной поддержкой, рассчитанная на профессиональную работу с источниками и документами.</p>
+                </div>
+                
+                <div class="modal-section">
+                    <h4 class="modal-section-title">Основные возможности</h4>
+                    <div class="features-grid">
+                        <div class="feature-item">
+                            <i class="fa-solid fa-microchip feature-icon"></i>
+                            <h5 class="feature-title">Продвинутые модели</h5>
+                            <p class="feature-description">Доступ к GPT‑5, Claude 4, Gemini, Sonar для качественных ответов и гибкости в задачах.</p>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fa-solid fa-magnifying-glass-chart feature-icon"></i>
+                            <h5 class="feature-title">Pro Search и Deep Research</h5>
+                            <p class="feature-description">Углублённые ответы с расширенным рассуждением и сбором фактов в реальном времени.</p>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fa-solid fa-file-arrow-up feature-icon"></i>
+                            <h5 class="feature-title">Загрузка файлов</h5>
+                            <p class="feature-description">Анализ PDF, документов и изображений прямо в запросах для быстрого разбора материалов.</p>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fa-solid fa-flask feature-icon"></i>
+                            <h5 class="feature-title">Labs и проекты</h5>
+                            <p class="feature-description">Преобразование запросов в документы, таблицы, дашборды и простые веб‑приложения.</p>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fa-solid fa-bullseye feature-icon"></i>
+                            <h5 class="feature-title">Режимы фокусировки</h5>
+                            <p class="feature-description">Поиск по академическим источникам, Reddit, YouTube, Wolfram для точной выборки данных.</p>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fa-solid fa-folder-tree feature-icon"></i>
+                            <h5 class="feature-title">Коллекции и память</h5>
+                            <p class="feature-description">Организация исследований по темам с учётом контекста предыдущих диалогов.</p>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fa-solid fa-microphone feature-icon"></i>
+                            <h5 class="feature-title">Голосовые функции</h5>
+                            <p class="feature-description">Голосовой режим, ответы с озвучкой и быстрый поиск на ходу через мобильные приложения.</p>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fa-solid fa-eye feature-icon"></i>
+                            <h5 class="feature-title">GPT-Vision</h5>
+                            <p class="feature-description">Понимание и анализ изображений с возможностью получения контекстных ответов.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Loader
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                document.querySelector('.loader').classList.add('hidden');
+            }, 800);
+        });
+        
+        // Search functionality
+        const searchInput = document.getElementById('searchInput');
+        const searchResults = document.getElementById('searchResults');
+        
+        // Search database
+        const searchDatabase = [
+            { title: "Perplexity AI Pro", category: "GPT Ассистенты", link: "#gpt", keywords: ["перплексити", "perplexity", "gpt5", "claude", "gemini", "ассистент", "chatgpt", "чат", "gpt", "джипити", "перплексити", "плексити", "перплекс"] },
+            { title: "GPT-chatbot.ru", category: "GPT Ассистенты", link: "https://gpt-chatbot.ru/", keywords: ["gpt", "chatbot", "чатбот", "ассистент", "гпт", "джипити", "chatgpt", "чат-бот"] },
+            { title: "DeepSeek Chat", category: "GPT Ассистенты", link: "https://chat.deepseek.com/", keywords: ["deepseek", "дипсик", "чат", "ассистент", "гпт", "gpt", "нейросеть"] },
+            { title: "ChatGPT", category: "GPT Ассистенты", link: "https://chatgpt.com/", keywords: ["chatgpt", "чатджипити", "чат-гпт", "openai", "опенаи", "gpt", "чат", "ассистент"] },
+            { title: "Gemini", category: "GPT Ассистенты", link: "https://gemini.google.com/", keywords: ["gemini", "гемини", "джемини", "google", "гугл", "ассистент", "чат", "ai", "нейросеть"] },
+            { title: "TryChatGPT", category: "GPT Ассистенты", link: "https://trychatgpt.ru/", keywords: ["trygpt", "chatgpt", "чат-гпт", "gpt", "чат", "ассистент", "нейросеть"] },
+            { title: "Claude 3.7 Sonnet", category: "GPT Ассистенты", link: "https://miniapps.ai/claude-3-7-sonnet", keywords: ["claude", "клод", "соннет", "sonnet", "anthropic", "антропик", "нейросеть", "ассистент"] },
+            
+            { title: "Gamma", category: "Презентации", link: "https://gamma.app/create/generate", keywords: ["gamma", "гамма", "презентации", "слайды", "powerpoint", "пауэрпоинт", "доклад"] },
+            { title: "Sokratic", category: "Презентации", link: "https://sokratic.ru/ru/", keywords: ["sokratic", "сократик", "презентации", "слайды", "powerpoint", "доклад"] },
+            { title: "Present Simple", category: "Презентации", link: "https://app.presentsimple.ai/", keywords: ["present simple", "презент симпл", "презентации", "слайды", "powerpoint", "доклад"] },
+            
+            { title: "Leonardo.ai", category: "Изображения", link: "https://app.leonardo.ai/image-generation", keywords: ["leonardo", "леонардо", "генерация изображений", "картинки", "фото", "аи арт", "ai art", "нейросеть"] },
+            { title: "PhotoRoom", category: "Изображения", link: "https://www.photoroom.com/", keywords: ["photoroom", "фоторум", "удаление фона", "фото", "фоторедактор", "редактирование", "изображения"] },
+            
+            { title: "Google Docs", category: "Документы", link: "https://docs.google.com/", keywords: ["google docs", "гугл документы", "документы", "текст", "word", "ворд", "файл", "docx"] },
+            { title: "Google Sheets", category: "Документы", link: "https://sheets.google.com/", keywords: ["google sheets", "гугл таблицы", "excel", "эксель", "таблицы", "xlsx"] },
+            { title: "Google Slides", category: "Документы", link: "https://slides.google.com/", keywords: ["google slides", "гугл презентации", "презентации", "powerpoint", "пауэрпоинт", "pptx"] },
+            { title: "PDF.js", category: "Документы", link: "https://mozilla.github.io/pdf.js/web/viewer.html", keywords: ["pdf", "пдф", "просмотр pdf", "просмотрщик", "reader", "ридер", "документы"] },
+            
+            { title: "HitVPN", category: "VPN", link: "https://s.hitvpn.tools/4080147.apk", keywords: ["hitvpn", "хит впн", "впн", "vpn", "обход блокировки", "прокси", "proxy"] },
+            { title: "HitProxy", category: "VPN", link: "https://apps.apple.com/ru/app/hitproxy/id6502572134", keywords: ["hitproxy", "хит прокси", "впн", "vpn", "прокси", "proxy", "обход блокировки"] },
+            { title: "OpenVPN", category: "VPN", link: "https://openvpn.net/client/", keywords: ["openvpn", "опенвпн", "впн", "vpn", "обход блокировки", "прокси", "proxy"] },
+            { title: "Дед VPN", category: "VPN", link: "https://apps.apple.com/us/app/%D0%B4%D0%B5%D0%B4-%D0%B2%D0%BF%D0%BD-%D0%B1%D1%8B%D1%81%D1%82%D1%80%D1%8B%D0%B9-proxy-vpn/id6738896306", keywords: ["дед впн", "впн", "vpn", "обход блокировки", "прокси", "proxy", "ios"] },
+            { title: "Planet VPN", category: "VPN", link: "https://apps.apple.com/us/app/planet-free-vpn-super-proxy/id1410235921?l=ru", keywords: ["planet vpn", "планет впн", "впн", "vpn", "обход блокировки", "прокси", "proxy", "ios"] }
+        ];
+        
+        // Function to normalize text (remove diacritics, lowercase, etc.)
+        function normalizeText(text) {
+            return text.toLowerCase()
+                .replace(/\s+/g, ' ')  // Replace multiple spaces with single space
+                .trim();
+        }
+        
+        // Levenstein distance for fuzzy searching
+        function levenshteinDistance(a, b) {
+            const matrix = [];
+            
+            // Initialize the matrix with numbers 0 to length
+            for (let i = 0; i <= b.length; i++) {
+                matrix[i] = [i];
+            }
+            
+            for (let i = 0; i <= a.length; i++) {
+                matrix[0][i] = i;
+            }
+            
+            for (let i = 1; i <= b.length; i++) {
+                for (let j = 1; j <= a.length; j++) {
+                    if (b.charAt(i - 1) === a.charAt(j - 1)) {
+                        matrix[i][j] = matrix[i - 1][j - 1];
+                    } else {
+                        matrix[i][j] = Math.min(
+                            matrix[i - 1][j - 1] + 1, // substitution
+                            matrix[i][j - 1] + 1,     // insertion
+                            matrix[i - 1][j] + 1      // deletion
+                        );
+                    }
+                }
+            }
+            
+            return matrix[b.length][a.length];
+        }
+        
+        // Calculate similarity between two strings (0-1)
+        function similarity(s1, s2) {
+            const longerLength = Math.max(s1.length, s2.length);
+            if (longerLength === 0) return 1.0;
+            return (longerLength - levenshteinDistance(s1, s2)) / longerLength;
+        }
+        
+        // Function to search through database with fuzzy matching
+        function performSearch(query) {
+            if (!query.trim()) return [];
+            
+            const normalizedQuery = normalizeText(query);
+            const results = [];
+            
+            // Check each item in the database
+            for (const item of searchDatabase) {
+                // Check title
+                const titleSimilarity = similarity(normalizeText(item.title), normalizedQuery);
+                
+                // Check keywords
+                let maxKeywordSimilarity = 0;
+                for (const keyword of item.keywords) {
+                    const keywordSimilarity = similarity(normalizeText(keyword), normalizedQuery);
+                    maxKeywordSimilarity = Math.max(maxKeywordSimilarity, keywordSimilarity);
+                }
+                
+                // Use the higher similarity score
+                const overallSimilarity = Math.max(titleSimilarity, maxKeywordSimilarity);
+                
+                // If similarity is above threshold, add to results
+                if (overallSimilarity > 0.3) {
+                    results.push({
+                        ...item,
+                        similarity: overallSimilarity
+                    });
+                }
+            }
+            
+            // Sort by similarity (highest first)
+            return results.sort((a, b) => b.similarity - a.similarity);
+        }
+        
+        // Display search results
+        function displaySearchResults(results) {
+            searchResults.innerHTML = '';
+            
+            if (results.length === 0) {
+                searchResults.innerHTML = '<div class="search-no-results">Ничего не найдено</div>';
+                return;
+            }
+            
+            results.forEach(result => {
+                const resultItem = document.createElement('div');
+                resultItem.className = 'search-result-item';
+                resultItem.innerHTML = `
+                    <div class="search-result-title">${result.title}</div>
+                    <div class="search-result-category">${result.category}</div>
+                `;
+                
+                resultItem.addEventListener('click', () => {
+                    window.location.href = result.link;
+                    searchResults.classList.remove('active');
+                });
+                
+                searchResults.appendChild(resultItem);
+            });
+        }
+        
+        // Search input event
+        searchInput.addEventListener('input', function() {
+            const query = this.value;
+            const results = performSearch(query);
+            displaySearchResults(results);
+            
+            if (query.trim()) {
+                searchResults.classList.add('active');
+            } else {
+                searchResults.classList.remove('active');
+            }
+        });
+        
+        // Close search results when clicking outside
+        document.addEventListener('click', function(event) {
+            if (!searchInput.contains(event.target) && !searchResults.contains(event.target)) {
+                searchResults.classList.remove('active');
+            }
+        });
+        
+        // Focus search input on Ctrl+K
+        document.addEventListener('keydown', function(event) {
+            if ((event.ctrlKey || event.metaKey) && event.key === 'k') {
+                event.preventDefault();
+                searchInput.focus();
+            }
+            
+            // Close search on Escape
+            if (event.key === 'Escape') {
+                searchResults.classList.remove('active');
+                searchInput.blur();
+            }
+        });
+        
+        // Mobile Navigation Toggle
+        const navToggle = document.getElementById('navToggle');
+        const mainNav = document.getElementById('mainNav');
+        
+        navToggle.addEventListener('click', function() {
+            mainNav.classList.toggle('active');
+            navToggle.innerHTML = mainNav.classList.contains('active') 
+                ? '<i class="fa-solid fa-xmark"></i>' 
+                : '<i class="fa-solid fa-bars"></i>';
+        });
+        
+        // Close mobile menu when clicking a link
+        document.querySelectorAll('nav a').forEach(link => {
+            link.addEventListener('click', function() {
+                mainNav.classList.remove('active');
+                navToggle.innerHTML = '<i class="fa-solid fa-bars"></i>';
+            });
+        });
+        
+        // Scroll Events
+        window.addEventListener('scroll', function() {
+            const header = document.getElementById('header');
+            const backToTop = document.getElementById('backToTop');
+            
+            // Header scroll effect
+            if (window.scrollY > 50) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+            
+            // Back to top button visibility
+            if (window.scrollY > 300) {
+                backToTop.classList.add('visible');
+            } else {
+                backToTop.classList.remove('visible');
+            }
+            
+            // Reveal animations on scroll
+            document.querySelectorAll('.animate-fadeIn').forEach(element => {
+                const position = element.getBoundingClientRect();
+                
+                // Check if element is in viewport
+                if(position.top < window.innerHeight - 100) {
+                    element.style.opacity = 1;
+                    element.style.transform = 'translateY(0)';
+                }
+            });
+        });
+        
+        // Back to top functionality
+        document.getElementById('backToTop').addEventListener('click', function() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+        
+        // Instructions toggle
+        document.getElementById('instructionsToggle').addEventListener('click', function() {
+            const content = document.getElementById('instructionsContent');
+            content.classList.toggle('show');
+            
+            const icon = this.querySelector('.fa-chevron-down');
+            icon.style.transform = content.classList.contains('show') ? 'rotate(180deg)' : 'rotate(0)';
+        });
+        
+        // Modal functionality
+        const modal = document.getElementById('perplexityModal');
+        const modalOpenBtn = document.getElementById('perplexityDetailsBtn');
+        const modalCloseBtn = document.getElementById('modalClose');
+        
+        modalOpenBtn.addEventListener('click', function() {
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        });
+        
+        modalCloseBtn.addEventListener('click', function() {
+            modal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        });
+        
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                modal.classList.remove('active');
+                document.body.style.overflow = 'auto';
+            }
+        });
+        
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                
+                const targetId = this.getAttribute('href');
+                const targetElement = document.querySelector(targetId);
+                
+                if (targetElement) {
+                    const headerHeight = document.getElementById('header').offsetHeight;
+                    const targetPosition = targetElement.getBoundingClientRect().top + window.pageYOffset - headerHeight;
+                    
+                    window.scrollTo({
+                        top: targetPosition,
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
